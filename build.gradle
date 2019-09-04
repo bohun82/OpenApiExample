@@ -1,0 +1,64 @@
+import io.swagger.codegen.DefaultGenerator
+import io.swagger.codegen.config.CodegenConfigurator
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.3.RELEASE")
+        classpath("io.swagger:swagger-codegen:2.3.1")
+    }
+}
+
+apply plugin: 'base'
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: org.springframework.boot.gradle.plugin.SpringBootPlugin
+
+bootRun {
+    main = 'source.App'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava.options.fork = true
+
+project.buildDir = "${rootProject.buildDir}"
+
+sourceSets {
+    main {
+        java {
+            srcDir "${project.buildDir}/src/main/java"
+        }
+    }
+}
+
+ext.swaggerFile = "${rootDir}/src/main/resources/example.yaml"
+
+dependencies {
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-parent', version: '2.1.7.RELEASE', ext: 'pom'
+    compile group: 'org.springframework.boot', name: 'spring-boot-maven-plugin', version: '2.1.7.RELEASE'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '2.1.7.RELEASE'
+    compile('io.springfox:springfox-swagger2:2.9.2')
+    compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.0.2'
+}
+
+task generate {
+    doLast {
+        def config = new CodegenConfigurator()
+        config.setLang("spring")
+        config.setInputSpec(rootProject.swaggerFile.toString())
+        config.setOutputDir(project.buildDir.toString())
+        config.setAdditionalProperties([
+                'dateLibrary'     : 'java8',
+                'interfaceOnly'   : 'true'
+        ])
+        new DefaultGenerator().opts(config.toClientOptInput()).generate()
+    }
+}
